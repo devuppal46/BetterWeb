@@ -146,26 +146,61 @@ function applyAccessibilityStyles(settings) {
   style.textContent = css;
   document.head.appendChild(style);
 
-  // Blue Filter Logic
-  const blueFilterId = "eduadapt-blue-filter";
-  const existingFilter = document.getElementById(blueFilterId);
-  if (existingFilter) existingFilter.remove();
+  // Warm Yellow Accessibility Mode Logic
+  const warmThemeId = "betterweb-warm-theme";
+  const warmOverlayId = "betterweb-warm-overlay";
+
+  // Remove existing warm theme elements
+  const existingTheme = document.getElementById(warmThemeId);
+  if (existingTheme) existingTheme.remove();
+  const existingOverlay = document.getElementById(warmOverlayId);
+  if (existingOverlay) existingOverlay.remove();
 
   if (settings.blueFilter) {
-    const filterDiv = document.createElement('div');
-    filterDiv.id = blueFilterId;
-    filterDiv.style.cssText = `
+    // Inject warm yellow/cream theme styles
+    const warmThemeStyle = document.createElement('style');
+    warmThemeStyle.id = warmThemeId;
+    warmThemeStyle.textContent = `
+      /* Warm Yellow Accessibility Mode */
+      body, html, div, section, article, main, aside, footer, header {
+        background-color: #fefbe8 !important;
+      }
+      
+      p, span, h1, h2, h3, h4, h5, h6, li, td, th, label, a {
+        color: #5c4a2f !important;
+      }
+      
+      button, input[type="button"], input[type="submit"], 
+      input[type="text"], input[type="email"], input[type="password"],
+      textarea, select, nav {
+        background-color: #fff9e6 !important;
+        color: #5c4a2f !important;
+        border-color: #d4a574 !important;
+      }
+      
+      /* Preserve image colors */
+      img, video, picture, canvas {
+        filter: none !important;
+        background-color: transparent !important;
+      }
+    `;
+    document.head.appendChild(warmThemeStyle);
+
+    // Inject subtle yellow overlay filter
+    const warmOverlay = document.createElement('div');
+    warmOverlay.id = warmOverlayId;
+    warmOverlay.style.cssText = `
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(135, 206, 250, 0.18);
+      background: rgba(255, 247, 204, 0.12);
       pointer-events: none;
       z-index: 9999999;
       mix-blend-mode: multiply;
     `;
-    document.body.appendChild(filterDiv);
+    document.body.appendChild(warmOverlay);
   }
 
   showNotification('BetterWeb Accessibility Settings Applied ✅', '#4CAF50');
@@ -177,9 +212,14 @@ function removeAccessibilityStyles() {
   const existing = document.getElementById(styleId);
   if (existing) existing.remove();
 
-  const blueFilterId = "eduadapt-blue-filter";
-  const existingFilter = document.getElementById(blueFilterId);
-  if (existingFilter) existingFilter.remove();
+  // Remove warm yellow accessibility mode elements
+  const warmThemeId = "betterweb-warm-theme";
+  const existingTheme = document.getElementById(warmThemeId);
+  if (existingTheme) existingTheme.remove();
+
+  const warmOverlayId = "betterweb-warm-overlay";
+  const existingOverlay = document.getElementById(warmOverlayId);
+  if (existingOverlay) existingOverlay.remove();
 
   showNotification('Accessibility Settings Removed', '#f44336');
 }
