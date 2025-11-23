@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>BetterWeb: Universal Accessibility</title>
@@ -7,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" href="icons/icon.png">
 </head>
+
 <body>
   <div class="popup-card">
     <div class="better-web-header">
@@ -15,7 +17,7 @@
         BetterWeb
       </div>
     </div>
-    
+
     <!-- Quick Accessibility Profiles -->
     <div class="section">
       <h3>Quick Profiles</h3>
@@ -26,16 +28,17 @@
         <button class="profile-btn" data-profile="cognitive">Cognitive</button>
         <button class="profile-btn" data-profile="blue-filter">Blue Filter</button>
       </div>
-    
-    <!-- Screen Reader Mode -->
-    <div class="section">
-      <h3>Screen Reader</h3>
-      <div class="form-group" style="flex-direction: row; align-items: center; gap: 12px;">
-        <label for="screenReaderToggle" style="flex: 1; margin: 0;">Enable Screen Reader</label>
-        <input type="checkbox" id="screenReaderToggle" />
+
+      <!-- Screen Reader Mode -->
+      <div class="section">
+        <h3>Screen Reader</h3>
+        <div class="form-group" style="flex-direction: row; align-items: center; gap: 12px;">
+          <label for="screenReaderToggle" style="flex: 1; margin: 0;">Enable Screen Reader</label>
+          <input type="checkbox" id="screenReaderToggle" />
+        </div>
+        <p style="font-size: 12px; color: #666; margin: 8px 0 0 0; line-height: 1.4;">Click any element on the page to
+          hear it read aloud.</p>
       </div>
-      <p style="font-size: 12px; color: #666; margin: 8px 0 0 0; line-height: 1.4;">Click any element on the page to hear it read aloud.</p>
-    </div>
     </div>
 
     <!-- Font & Text Settings -->
@@ -52,25 +55,25 @@
           <option value="Times New Roman">Times New Roman</option>
         </select>
       </div>
-      
+
       <div class="form-group">
         <label for="fontSize">Font Size</label>
         <input type="range" id="fontSize" min="10" max="32" value="16" />
         <span id="fontSizeValue">16px</span>
       </div>
-      
+
       <div class="form-group">
         <label for="letterSpacing">Letter Spacing</label>
         <input type="range" id="letterSpacing" min="0" max="20" value="0" />
         <span id="letterSpacingValue">0em</span>
       </div>
-      
+
       <div class="form-group">
         <label for="lineHeight">Line Height</label>
         <input type="range" id="lineHeight" min="1" max="3" step="0.1" value="1.4" />
         <span id="lineHeightValue">1.4</span>
       </div>
-      
+
       <div class="form-group">
         <label for="wordSpacing">Word Spacing</label>
         <input type="range" id="wordSpacing" min="0" max="20" value="0" />
@@ -91,19 +94,19 @@
           <option value="achromatopsia">Achromatopsia (Total)</option>
         </select>
       </div>
-      
+
       <div class="form-group">
         <label for="contrast">Contrast Level</label>
         <input type="range" id="contrast" min="50" max="200" value="100" />
         <span id="contrastValue">100%</span>
       </div>
-      
+
       <div class="form-group">
         <label for="brightness">Brightness</label>
         <input type="range" id="brightness" min="50" max="150" value="100" />
         <span id="brightnessValue">100%</span>
       </div>
-      
+
       <div class="form-group color-group">
         <div class="color-item">
           <label for="bgColor">Background Color</label>
@@ -112,7 +115,7 @@
             <button id="resetBgColor" class="mini-btn">Reset</button>
           </div>
         </div>
-        
+
         <div class="color-item">
           <label for="textColor">Text Color</label>
           <div class="color-input-group">
@@ -131,22 +134,22 @@
           <label for="hideImages">Hide Images</label>
           <input type="checkbox" id="hideImages" />
         </div>
-        
+
         <div class="form-group">
           <label for="highlightLinks">Highlight Links</label>
           <input type="checkbox" id="highlightLinks" />
         </div>
-        
+
         <div class="form-group">
           <label for="bigCursor">Large Cursor</label>
           <input type="checkbox" id="bigCursor" />
         </div>
-        
+
         <div class="form-group">
           <label for="pauseAnimations">Pause Animations</label>
           <input type="checkbox" id="pauseAnimations" />
         </div>
-        
+
         <div class="form-group">
           <label for="simplifyLayout">Simplify Layout</label>
           <input type="checkbox" id="simplifyLayout" />
@@ -158,7 +161,11 @@
     <div class="button-group">
       <button id="reset" class="reset-button">Reset All</button>
     </div>
+
+    <!-- Hidden state storage -->
+    <input type="checkbox" id="blueFilterEnabled" style="display:none;" />
   </div>
   <script src="popup.js"></script>
 </body>
+
 </html>

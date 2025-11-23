@@ -14,21 +14,27 @@ const defaultSettings = {
   letterSpacing: 0,
   lineHeight: 1.4,
   wordSpacing: 0,
-  
+
   // Colors & Vision
   cbType: '',
   contrast: 100,
   brightness: 100,
   bgColor: '#ffffff',
   textColor: '#000000',
-  
+
   // Layout & Navigation
   hideImages: false,
   highlightLinks: false,
   bigCursor: false,
   pauseAnimations: false,
   simplifyLayout: false,
-  
+
+  // Screen Reader
+  screenReaderEnabled: false,
+
+  // Blue Filter
+  blueFilterEnabled: false,
+
   // Element-specific customizations
   customElements: {}
 };
@@ -72,6 +78,9 @@ const accessibilityProfiles = {
     hideImages: true,
     bgColor: '#f0f8ff',
     textColor: '#333333'
+  },
+  'blue-filter': {
+    blueFilterEnabled: true
   }
 };
 
@@ -91,21 +100,31 @@ function loadSettings() {
     document.getElementById('letterSpacing').value = data.letterSpacing || 0;
     document.getElementById('lineHeight').value = data.lineHeight || 1.4;
     document.getElementById('wordSpacing').value = data.wordSpacing || 0;
-    
+
     // Colors & Vision
     document.getElementById('cbType').value = data.cbType || '';
     document.getElementById('contrast').value = data.contrast || 100;
     document.getElementById('brightness').value = data.brightness || 100;
     document.getElementById('bgColor').value = data.bgColor || '#ffffff';
     document.getElementById('textColor').value = data.textColor || '#000000';
-    
+
     // Layout & Navigation
     document.getElementById('hideImages').checked = data.hideImages || false;
     document.getElementById('highlightLinks').checked = data.highlightLinks || false;
     document.getElementById('bigCursor').checked = data.bigCursor || false;
     document.getElementById('pauseAnimations').checked = data.pauseAnimations || false;
     document.getElementById('simplifyLayout').checked = data.simplifyLayout || false;
-    
+
+    // Screen Reader
+    if (document.getElementById('screenReaderToggle')) {
+      document.getElementById('screenReaderToggle').checked = data.screenReaderEnabled || false;
+    }
+
+    // Blue Filter (Hidden)
+    if (document.getElementById('blueFilterEnabled')) {
+      document.getElementById('blueFilterEnabled').checked = data.blueFilterEnabled || false;
+    }
+
     updateDisplayValues();
   });
 }
@@ -127,56 +146,65 @@ function setupEventListeners() {
     document.getElementById('fontSizeValue').textContent = `${e.target.value}px`;
     throttledApplySettings();
   });
-  
+
   document.getElementById('letterSpacing').addEventListener('input', (e) => {
     document.getElementById('letterSpacingValue').textContent = `${(e.target.value / 10)}em`;
     throttledApplySettings();
   });
-  
+
   document.getElementById('lineHeight').addEventListener('input', (e) => {
     document.getElementById('lineHeightValue').textContent = e.target.value;
     throttledApplySettings();
   });
-  
+
   document.getElementById('wordSpacing').addEventListener('input', (e) => {
     document.getElementById('wordSpacingValue').textContent = `${(e.target.value / 10)}em`;
     throttledApplySettings();
   });
-  
+
   document.getElementById('contrast').addEventListener('input', (e) => {
     document.getElementById('contrastValue').textContent = `${e.target.value}%`;
     throttledApplySettings();
   });
-  
+
   document.getElementById('brightness').addEventListener('input', (e) => {
     document.getElementById('brightnessValue').textContent = `${e.target.value}%`;
     throttledApplySettings();
   });
-  
+
   // Color reset buttons
   document.getElementById('resetBgColor').addEventListener('click', () => {
     document.getElementById('bgColor').value = '#ffffff';
     throttledApplySettings();
   });
-  
+
   document.getElementById('resetTextColor').addEventListener('click', () => {
     document.getElementById('textColor').value = '#000000';
     throttledApplySettings();
   });
-  
+
   // Throttled apply for select and color inputs
   document.getElementById('fontFamily').addEventListener('change', throttledApplySettings);
   document.getElementById('cbType').addEventListener('change', throttledApplySettings);
   document.getElementById('bgColor').addEventListener('input', throttledApplySettings);
   document.getElementById('textColor').addEventListener('input', throttledApplySettings);
-  
+
   // Throttled apply for checkboxes
   document.getElementById('hideImages').addEventListener('change', throttledApplySettings);
   document.getElementById('highlightLinks').addEventListener('change', throttledApplySettings);
   document.getElementById('bigCursor').addEventListener('change', throttledApplySettings);
   document.getElementById('pauseAnimations').addEventListener('change', throttledApplySettings);
   document.getElementById('simplifyLayout').addEventListener('change', throttledApplySettings);
-  
+
+  // Screen Reader toggle - immediate response
+  const screenReaderToggle = document.getElementById('screenReaderToggle');
+  if (screenReaderToggle) {
+    screenReaderToggle.addEventListener('change', (e) => {
+      const isEnabled = e.target.checked;
+      handleScreenReaderToggle(isEnabled);
+    });
+  }
+
   // Element search (check if elements exist first)
   const searchBtn = document.getElementById('searchBtn');
   const elementSearch = document.getElementById('elementSearch');
@@ -188,7 +216,7 @@ function setupEventListeners() {
       if (e.key === 'Enter') searchElements();
     });
   }
-  
+
   // Main buttons
   document.getElementById('reset').addEventListener('click', resetSettings);
 }
@@ -199,7 +227,7 @@ function setupProfileButtons() {
     btn.addEventListener('click', (e) => {
       const profile = e.target.dataset.profile;
       applyProfile(profile);
-      
+
       // Update active state
       document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('active'));
       e.target.classList.add('active');
@@ -211,7 +239,7 @@ function setupProfileButtons() {
 function applyProfile(profileName) {
   const profile = accessibilityProfiles[profileName];
   if (!profile) return;
-  
+
   // First, reset all settings to defaults to avoid carrying over previous profile settings
   Object.keys(defaultSettings).forEach(key => {
     const element = document.getElementById(key);
@@ -223,7 +251,7 @@ function applyProfile(profileName) {
       }
     }
   });
-  
+
   // Then apply the specific profile settings
   Object.keys(profile).forEach(key => {
     const element = document.getElementById(key);
@@ -235,9 +263,9 @@ function applyProfile(profileName) {
       }
     }
   });
-  
+
   updateDisplayValues();
-  
+
   // Auto-apply the profile with throttling
   setTimeout(() => throttledApplySettings(), 100);
 }
@@ -246,26 +274,26 @@ function applyProfile(profileName) {
 function searchElements() {
   const elementSearchInput = document.getElementById('elementSearch');
   if (!elementSearchInput) return; // Element doesn't exist
-  
+
   const searchTerm = elementSearchInput.value.toLowerCase();
   if (!searchTerm) return;
-  
+
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const currentTab = tabs[0];
-    
+
     // Check if we're on a restricted page
-    if (currentTab && currentTab.url && 
-        (currentTab.url.startsWith('chrome://') || 
-         currentTab.url.startsWith('edge://') || 
-         currentTab.url.startsWith('chrome-extension://') ||
-         currentTab.url.startsWith('moz-extension://') ||
-         currentTab.url.startsWith('about:'))) {
+    if (currentTab && currentTab.url &&
+      (currentTab.url.startsWith('chrome://') ||
+        currentTab.url.startsWith('edge://') ||
+        currentTab.url.startsWith('chrome-extension://') ||
+        currentTab.url.startsWith('moz-extension://') ||
+        currentTab.url.startsWith('about:'))) {
       return;
     }
-    
+
     // Only inject if we have a valid tab and URL
-    if (currentTab && currentTab.id && currentTab.url && 
-        (currentTab.url.startsWith('http://') || currentTab.url.startsWith('https://'))) {
+    if (currentTab && currentTab.id && currentTab.url &&
+      (currentTab.url.startsWith('http://') || currentTab.url.startsWith('https://'))) {
       chrome.scripting.executeScript({
         target: { tabId: currentTab.id },
         func: findElementsOnPage,
@@ -285,14 +313,14 @@ function searchElements() {
 function displaySearchResults(elements) {
   const resultsContainer = document.getElementById('searchResults');
   if (!resultsContainer) return; // Element doesn't exist
-  
+
   resultsContainer.innerHTML = '';
-  
+
   if (elements.length === 0) {
     resultsContainer.innerHTML = '<div class="search-result-item">No elements found</div>';
     return;
   }
-  
+
   elements.slice(0, 10).forEach((element, index) => {
     const resultItem = document.createElement('div');
     resultItem.className = 'search-result-item';
@@ -308,20 +336,20 @@ function displaySearchResults(elements) {
 function highlightElement(selector) {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const currentTab = tabs[0];
-    
+
     // Check if we're on a restricted page
-    if (currentTab && currentTab.url && 
-        (currentTab.url.startsWith('chrome://') || 
-         currentTab.url.startsWith('edge://') || 
-         currentTab.url.startsWith('chrome-extension://') ||
-         currentTab.url.startsWith('moz-extension://') ||
-         currentTab.url.startsWith('about:'))) {
+    if (currentTab && currentTab.url &&
+      (currentTab.url.startsWith('chrome://') ||
+        currentTab.url.startsWith('edge://') ||
+        currentTab.url.startsWith('chrome-extension://') ||
+        currentTab.url.startsWith('moz-extension://') ||
+        currentTab.url.startsWith('about:'))) {
       return;
     }
-    
+
     // Only inject if we have a valid tab and URL
-    if (currentTab && currentTab.id && currentTab.url && 
-        (currentTab.url.startsWith('http://') || currentTab.url.startsWith('https://'))) {
+    if (currentTab && currentTab.id && currentTab.url &&
+      (currentTab.url.startsWith('http://') || currentTab.url.startsWith('https://'))) {
       chrome.scripting.executeScript({
         target: { tabId: currentTab.id },
         func: (selector) => {
@@ -329,7 +357,7 @@ function highlightElement(selector) {
           document.querySelectorAll('.eduadapt-highlight').forEach(el => {
             el.classList.remove('eduadapt-highlight');
           });
-          
+
           // Add highlight to selected element
           const element = document.querySelector(selector);
           if (element) {
@@ -337,7 +365,7 @@ function highlightElement(selector) {
             element.style.outline = '3px solid #ff6b6b';
             element.style.outlineOffset = '2px';
             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
+
             // Remove highlight after 3 seconds
             setTimeout(() => {
               element.style.outline = '';
@@ -357,12 +385,12 @@ function highlightElement(selector) {
 // Throttled apply settings to prevent quota exceeded errors
 function throttledApplySettings() {
   const now = Date.now();
-  
+
   // Clear any existing timeout
   if (applyTimeout) {
     clearTimeout(applyTimeout);
   }
-  
+
   // If enough time has passed since last apply, apply immediately
   if (now - lastApplyTime >= MIN_APPLY_INTERVAL) {
     applySettings();
@@ -380,25 +408,25 @@ function throttledApplySettings() {
 // Apply all settings
 function applySettings() {
   const settings = getCurrentSettings();
-  
+
   chrome.storage.sync.set(settings, () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const currentTab = tabs[0];
-      
+
       // Check if we're on a restricted page
-      if (currentTab && currentTab.url && 
-          (currentTab.url.startsWith('chrome://') || 
-           currentTab.url.startsWith('edge://') || 
-           currentTab.url.startsWith('chrome-extension://') ||
-           currentTab.url.startsWith('moz-extension://') ||
-           currentTab.url.startsWith('about:'))) {
+      if (currentTab && currentTab.url &&
+        (currentTab.url.startsWith('chrome://') ||
+          currentTab.url.startsWith('edge://') ||
+          currentTab.url.startsWith('chrome-extension://') ||
+          currentTab.url.startsWith('moz-extension://') ||
+          currentTab.url.startsWith('about:'))) {
         // Silently skip injection on restricted pages
         return;
       }
-      
+
       // Only inject if we have a valid tab and URL
-      if (currentTab && currentTab.id && currentTab.url && 
-          (currentTab.url.startsWith('http://') || currentTab.url.startsWith('https://'))) {
+      if (currentTab && currentTab.id && currentTab.url &&
+        (currentTab.url.startsWith('http://') || currentTab.url.startsWith('https://'))) {
         chrome.scripting.executeScript({
           target: { tabId: currentTab.id },
           func: applyAccessibilityStyles,
@@ -429,7 +457,9 @@ function getCurrentSettings() {
     highlightLinks: document.getElementById('highlightLinks').checked,
     bigCursor: document.getElementById('bigCursor').checked,
     pauseAnimations: document.getElementById('pauseAnimations').checked,
-    simplifyLayout: document.getElementById('simplifyLayout').checked
+    simplifyLayout: document.getElementById('simplifyLayout').checked,
+    screenReaderEnabled: document.getElementById('screenReaderToggle')?.checked || false,
+    blueFilterEnabled: document.getElementById('blueFilterEnabled')?.checked || false
   };
 }
 
@@ -445,27 +475,27 @@ function resetSettings() {
       }
     }
   });
-  
+
   updateDisplayValues();
-  
+
   chrome.storage.sync.clear(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const currentTab = tabs[0];
-      
+
       // Check if we're on a restricted page
-      if (currentTab && currentTab.url && 
-          (currentTab.url.startsWith('chrome://') || 
-           currentTab.url.startsWith('edge://') || 
-           currentTab.url.startsWith('chrome-extension://') ||
-           currentTab.url.startsWith('moz-extension://') ||
-           currentTab.url.startsWith('about:'))) {
+      if (currentTab && currentTab.url &&
+        (currentTab.url.startsWith('chrome://') ||
+          currentTab.url.startsWith('edge://') ||
+          currentTab.url.startsWith('chrome-extension://') ||
+          currentTab.url.startsWith('moz-extension://') ||
+          currentTab.url.startsWith('about:'))) {
         // Silently skip injection on restricted pages
         return;
       }
-      
+
       // Only inject if we have a valid tab and URL
-      if (currentTab && currentTab.id && currentTab.url && 
-          (currentTab.url.startsWith('http://') || currentTab.url.startsWith('https://'))) {
+      if (currentTab && currentTab.id && currentTab.url &&
+        (currentTab.url.startsWith('http://') || currentTab.url.startsWith('https://'))) {
         chrome.scripting.executeScript({
           target: { tabId: currentTab.id },
           func: removeAccessibilityStyles
@@ -475,7 +505,7 @@ function resetSettings() {
         });
       }
     });
-    
+
     // Remove active state from profile buttons
     document.querySelectorAll('.profile-btn').forEach(btn => btn.classList.remove('active'));
   });
@@ -489,13 +519,13 @@ function findElementsOnPage(searchTerm) {
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'div',
     'img', 'video', 'iframe', 'form', 'table', 'nav', 'header', 'footer'
   ];
-  
+
   selectors.forEach(selector => {
     const foundElements = document.querySelectorAll(selector);
     foundElements.forEach((el, index) => {
       const text = el.textContent || el.alt || el.title || '';
       const tag = el.tagName.toLowerCase();
-      
+
       if (tag.includes(searchTerm) || text.toLowerCase().includes(searchTerm)) {
         elements.push({
           tag: tag,
@@ -505,8 +535,43 @@ function findElementsOnPage(searchTerm) {
       }
     });
   });
-  
+
   return elements;
+}
+
+// Handle Screen Reader Toggle - Immediate Response
+function handleScreenReaderToggle(isEnabled) {
+  // Save state immediately
+  chrome.storage.sync.set({ screenReaderEnabled: isEnabled }, () => {
+    // Apply to current tab immediately
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const currentTab = tabs[0];
+
+      // Check if we're on a valid page
+      if (currentTab && currentTab.url &&
+        (currentTab.url.startsWith('http://') || currentTab.url.startsWith('https://'))) {
+
+        // Inject the enable/disable command immediately
+        chrome.scripting.executeScript({
+          target: { tabId: currentTab.id },
+          func: (enabled) => {
+            if (enabled) {
+              if (window.betterWebEnableScreenReader) {
+                window.betterWebEnableScreenReader();
+              }
+            } else {
+              if (window.betterWebDisableScreenReader) {
+                window.betterWebDisableScreenReader();
+              }
+            }
+          },
+          args: [isEnabled]
+        }).catch((error) => {
+          console.log('Screen Reader toggle error:', error.message);
+        });
+      }
+    });
+  });
 }
 
 function applyAccessibilityStyles(settings) {
@@ -528,7 +593,7 @@ function applyAccessibilityStyles(settings) {
 
   const style = document.createElement("style");
   style.id = styleId;
-  
+
   let css = `
     /* Universal Accessibility Styles */
     html, body {
@@ -607,7 +672,7 @@ function removeAccessibilityStyles() {
   const styleId = "eduadapt-accessibility-style";
   const existing = document.getElementById(styleId);
   if (existing) existing.remove();
-  
+
   // Show confirmation
   const notification = document.createElement('div');
   notification.style.cssText = `
@@ -625,7 +690,7 @@ function removeAccessibilityStyles() {
   `;
   notification.textContent = 'Accessibility Settings Removed';
   document.body.appendChild(notification);
-  
+
   setTimeout(() => {
     if (notification.parentNode) {
       notification.parentNode.removeChild(notification);

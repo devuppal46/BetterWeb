@@ -423,3 +423,56 @@ h2 {
 .checkbox-grid .form-group input[type="checkbox"] {
   margin: 0;
 }
+
+/* Color Group Layout */
+.color-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.color-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.color-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-input-group input[type="color"] {
+  width: 40px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* Checkbox Grid Layout */
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.checkbox-grid .form-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.checkbox-grid .form-group label {
+  font-size: 13px;
+  margin: 0;
+  flex: 1;
+}
+
+.checkbox-grid .form-group input[type="checkbox"] {
+  margin: 0;
+}
